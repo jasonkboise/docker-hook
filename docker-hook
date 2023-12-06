@@ -38,35 +38,47 @@ class RequestHandler(BaseHTTPRequestHandler):
             env.update(('REPOSITORY_' + var.upper(), str(val))
                        for var, val in json_params['repository'].items())
 
-        # Check if the secret URL was called
-        token = args.token or os.environ.get("DOCKER_AUTH_TOKEN")
-        if token == self.path[1:]:
-            logging.info("Start executing '%s'" % args.cmd)
-            try:
-                Popen(args.cmd, env=env).wait()
-                self.send_response(200, "OK")
-                if 'callback_url' in json_params:
-                    # Make a callback to Docker Hub
-                    data = {'state': 'success'}
-                    headers = {'Content-type': 'application/json',
-                               'Accept': 'text/plain'}
-                    requests.post(json_params['callback_url'],
-                                  data=json.dumps(data),
-                                  headers=headers)
-            except OSError as err:
-                self.send_response(500, "OSError")
-                logging.error("You probably didn't use 'sh ./script.sh'.")
-                logging.error(err)
-                if 'callback_url' in json_params:
-                    # Make a callback to Docker Hub
-                    data = {'state': 'failure',
-                            'description': str(err)}
-                    headers = {'Content-type': 'application/json',
-                               'Accept': 'text/plain'}
-                    requests.post(json_params['callback_url'],
-                                  data=json.dumps(data),
-                                  headers=headers)
+        # Only execute the command if workflow completed successfully
+        if 'status' in json_params and json_params['status'] == 'completed' and 'conclusion' in json_params and json_params['conclusion'] == 'success':
+            logging.info("Workflow (id: %s) completed successfully", json_params['workflow_id'])
+            # Check if the secret URL was called
+            token = args.token or os.environ.get("DOCKER_AUTH_TOKEN")
+            if token == self.path[1:]:
+                logging.info("Start executing '%s'" % args.cmd)
+                try:
+                    Popen(args.cmd, env=env).wait()
+                    self.send_response(200, "OK")
+                    if 'callback_url' in json_params:
+                        # Make a callback to Docker Hub
+                        data = {'state': 'success'}
+                        headers = {'Content-type': 'application/json',
+                                'Accept': 'text/plain'}
+                        requests.post(json_params['callback_url'],
+                                    data=json.dumps(data),
+                                    headers=headers)
+                except OSError as err:
+                    self.send_response(500, "OSError")
+                    logging.error("You probably didn't use 'sh ./script.sh'.")
+                    logging.error(err)
+                    if 'callback_url' in json_params:
+                        # Make a callback to Docker Hub
+                        data = {'state': 'failure',
+                                'description': str(err)}
+                        headers = {'Content-type': 'application/json',
+                                'Accept': 'text/plain'}
+                        requests.post(json_params['callback_url'],
+                                    data=json.dumps(data),
+                                    headers=headers)
+            else:
+                self.send_response(401, "Not authorized")
+        elif 'status' in json_params and json_params['status'] == 'in_progress':
+            logging.info("Workflow (id: %s) in progress", json_params['workflow_id'])
+            self.send_response(200, "OK")
+        elif 'status' in json_params and json_params['status'] == 'queued':
+            logging.info("Workflow (id: %s) was queued", json_params['workflow_id'])
+            self.send_response(200, "OK")
         else:
+            logging.info("Webhook gave an invalid post request")
             self.send_response(401, "Not authorized")
         self.end_headers()
 
