@@ -34,7 +34,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         json_params = {}
         if len(json_payload) > 0:
             json_params = json.loads(json_payload)
-            print(json_params)
             env.update(('REPOSITORY_' + var.upper(), str(val))
                        for var, val in json_params['repository'].items())
 
@@ -78,7 +77,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             logging.info("Workflow (id: %s) was queued", json_params['workflow_id'])
             self.send_response(200, "OK")
         else:
-            logging.info("Webhook gave an invalid post request")
+            logging.error("Webhook gave an invalid post request")
+            print(json_params)
             self.send_response(401, "Not authorized")
         self.end_headers()
 
