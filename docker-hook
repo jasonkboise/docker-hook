@@ -39,7 +39,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         # Only execute the command if workflow, and completed successfully
         if 'workflow_run' in json_params:
-            workflow_json = json_params['workflow_run']
+            workflow_json = json_params['workflow_run'].values()
             if workflow_json['status'] == 'completed' and workflow_json['conclusion'] == 'success':
                 logging.info("Workflow (id: %s) completed successfully", workflow_json['workflow_id'])
                 # Check if the secret URL was called
