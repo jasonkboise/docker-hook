@@ -4,6 +4,11 @@
 
 `docker-hook` listens to incoming HTTP requests and triggers your specified command.
 
+NOTE: This is a fork of the original docker-hook repository that only listens to the GitHub repository webhook,
+and will only trigger your specified command if your repository:
+1. Has a workflow
+2. The workflow completes successfully after a commit
+
 ## Features
 
 * No dependencies
