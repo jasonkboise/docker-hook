@@ -34,7 +34,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         json_params = {}
         if len(json_payload) > 0:
             json_params = json.loads(json_payload)
-            print(json_params)
+            print(json_params['workflow_run'])
             env.update(('REPOSITORY_' + var.upper(), str(val))
                        for var, val in json_params['repository'].items())
 
