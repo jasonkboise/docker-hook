@@ -34,6 +34,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         json_params = {}
         if len(json_payload) > 0:
             json_params = json.loads(json_payload)
+            print(json_params)
             env.update(('REPOSITORY_' + var.upper(), str(val))
                        for var, val in json_params['repository'].items())
 
@@ -80,7 +81,6 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.send_response(200, "OK")
         else:
             logging.error("Webhook gave a request with no workflow action")
-            print(json_params)
             self.send_response(401, "Not authorized")
         self.end_headers()
 
