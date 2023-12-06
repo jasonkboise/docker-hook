@@ -34,15 +34,13 @@ class RequestHandler(BaseHTTPRequestHandler):
         json_params = {}
         if len(json_payload) > 0:
             json_params = json.loads(json_payload)
-            print(json_params['workflow_run'])
             env.update(('REPOSITORY_' + var.upper(), str(val))
                        for var, val in json_params['repository'].items())
 
-        # Only execute the command if workflow, and completed successfully
+        # Only execute the command if webhook post is from a workflow status report, and it the workflow was completed successfully
         if 'workflow_run' in json_params:
-            workflow_json = json_params['workflow_run'][0]
-            if workflow_json['status'] == 'completed' and workflow_json['conclusion'] == 'success':
-                logging.info("Workflow (id: %s) completed successfully", workflow_json['workflow_id'])
+            if json_params['workflow_run']['status'] == 'completed' and json_params['workflow_run']['conclusion'] == 'success':
+                logging.info("Workflow (id: %s) completed successfully", json_params['workflow_run']['workflow_id'])
                 # Check if the secret URL was called
                 token = args.token or os.environ.get("DOCKER_AUTH_TOKEN")
                 if token == self.path[1:]:
@@ -73,11 +71,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                                         headers=headers)
                 else:
                     self.send_response(401, "Not authorized")
-            elif workflow_json['status'] == 'in_progress':
-                logging.info("Workflow (id: %s) in progress", workflow_json['workflow_id'])
+            elif json_params['workflow_run']['status'] == 'in_progress':
+                logging.info("Workflow (id: %s) in progress", json_params['workflow_run']['workflow_id'])
                 self.send_response(200, "OK")
-            elif workflow_json['status'] == 'queued':
-                logging.info("Workflow (id: %s) was queued", workflow_json['workflow_id'])
+            elif json_params['workflow_run']['status'] == 'queued':
+                logging.info("Workflow (id: %s) was queued", json_params['workflow_run']['workflow_id'])
                 self.send_response(200, "OK")
         else:
             logging.error("Webhook gave a request with no workflow action")
