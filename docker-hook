@@ -78,7 +78,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_response(200, "OK")
         else:
             logging.error("Webhook gave an invalid post request")
-            print(json_params)
+            print(json_params['status'])
+            print(json_params['conclusion'])
             self.send_response(401, "Not authorized")
         self.end_headers()
 
