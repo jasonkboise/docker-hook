@@ -35,6 +35,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         if len(json_payload) > 0:
             json_params = json.loads(json_payload)
             print(json_params)
+            print('branch: ' + args.branch)
             env.update(('REPOSITORY_' + var.upper(), str(val))
                        for var, val in json_params['repository'].items())
 
@@ -100,6 +101,10 @@ def get_parser():
                         required=True,
                         nargs="*",
                         help="Command to execute when triggered")
+    parser.add_argument("-b", "--branch",
+                        dest="branch"
+                        required=True,
+                        help="Which git branch workflow should be completed on")
     parser.add_argument("--addr",
                         dest="addr",
                         default="0.0.0.0",

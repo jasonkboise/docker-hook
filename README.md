@@ -1,13 +1,13 @@
 # docker-hook
 
-> Automatic Docker Deployment via [Webhooks](https://docs.docker.com/docker-hub/repos/#webhooks)
+> Automatic Docker Deployment via GitHub Repository [Webhooks](https://docs.github.com/en/rest/repos/webhooks)
 
 `docker-hook` listens to incoming HTTP requests and triggers your specified command.
 
-NOTE: This is a fork of the original docker-hook repository that only listens to the GitHub repository webhook,
-and will only trigger your specified command if your repository:
+NOTE: This is a fork of the original docker-hook repository that only listens to the GitHub repository webhook, and will only trigger your specified command if your repository:
 1. Has a workflow
-2. The workflow completes successfully after a commit
+2. The workflow completes successfully
+3. The workflow completes on your specified branch
 
 ## Features
 
@@ -31,7 +31,7 @@ $ curl https://raw.githubusercontent.com/jasonkboise/docker-hook/master/docker-h
 #### Start `docker-hook`
 
 ```sh
-$ docker-hook -t <auth-token> -c <command>
+$ docker-hook -t <auth-token> -c <command> -b <branch>
 ```
 
 ##### Auth-Token
@@ -42,7 +42,13 @@ Please choose a secure `auth-token` string or generate one with `$ uuidgen`. Kee
 
 The `command` can be any bash command of your choice. See the following [example](#example). This command will be triggered each time someone makes a HTTP request.
 
+##### Branch
+
+The `branch` is the name of the git branch we want to watch for. If a workflow completes on this branch, only then will the command execute.
+
 ### 2. Configuration On Docker Hub
+
+NOTE: This section is outdated. Please configure on [GitHub](https://docs.github.com/en/rest/repos/webhooks) instead.
 
 Add a webhook like on the following image. `example.com` can be the domain of your server or its ip address. `docker-hook` listens to port `8555`. Please replace `my-super-safe-token` with your `auth-token`.
 
@@ -50,17 +56,17 @@ Add a webhook like on the following image. `example.com` can be the domain of yo
 
 ## Example
 
-This example will stop the current running `yourname/app` container, pull the newest version and start a new container.
+This example will stop the current running `yourname/app` container, pull the newest version and start a new container. This will only happen if the workflow on the main branch completes successfully, and we are sent a success message from the GitHub Webhook.
 
 ```sh
-$ docker-hook -t my-super-safe-token -c sh ./deploy.sh
+$ docker-hook -t my-super-safe-token -c sh ./deploy.sh -b main
 ```
 
 If you want to store the authentication token as an environment variable, then run
 ```sh
 # Make sure there is no space before or after the `=` sign
 $ export DOCKER_AUTH_TOKEN=<my-super-safe-token>
-$ docker-hook -c sh ./deploy.sh
+$ docker-hook -c sh ./deploy.sh -b main
 ```
 #### `deploy.sh`
 
