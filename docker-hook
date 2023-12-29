@@ -102,7 +102,7 @@ def get_parser():
                         nargs="*",
                         help="Command to execute when triggered")
     parser.add_argument("-b", "--branch",
-                        dest="branch"
+                        dest="branch",
                         required=True,
                         help="Which git branch workflow should be completed on")
     parser.add_argument("--addr",
